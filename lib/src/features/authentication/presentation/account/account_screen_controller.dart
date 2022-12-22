@@ -10,7 +10,7 @@ class AccountScreenController extends StateNotifier<AsyncValue<void>> {
 
   final FakeAuthRepository authRepository;
 
-  Future<bool> signOut() async {
+  Future<void> signOut() async {
     //set state to loading
     //sign out (using auth repository)
     //If success,set state to data
@@ -33,7 +33,6 @@ class AccountScreenController extends StateNotifier<AsyncValue<void>> {
       () => authRepository.signOut(),
     );
 
-    return state.hasError == false;
   }
 }
 

@@ -1,7 +1,9 @@
 import 'package:ecommerce_app/src/common_widgets/alert_dialogs.dart';
+import 'package:ecommerce_app/src/features/authentication/data/fake_auth_repository.dart';
 import 'package:ecommerce_app/src/features/authentication/presentation/account/account_screen_controller.dart';
 import 'package:ecommerce_app/src/localization/string_hardcoded.dart';
 import 'package:ecommerce_app/src/features/authentication/domain/app_user.dart';
+import 'package:ecommerce_app/src/utils/async_value_UI.dart';
 import 'package:flutter/material.dart';
 import 'package:ecommerce_app/src/common_widgets/action_text_button.dart';
 import 'package:ecommerce_app/src/common_widgets/responsive_center.dart';
@@ -14,16 +16,10 @@ class AccountScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.listen<AsyncValue<void>>(accountScreenControllerProvider,
-        (previous, state) {
-      if (state.hasError && !state.isLoading) {
-        showExceptionAlertDialog(
-          context: context,
-          title: 'Error'.hardcoded,
-          exception: state.error,
-        );
-      }
-    });
+    ref.listen<AsyncValue<void>>(
+      accountScreenControllerProvider,
+      (previous, state) => state.showAlertDialogOnError(context),
+    );
     final state = ref.watch(accountScreenControllerProvider);
     return Scaffold(
       appBar: AppBar(
@@ -37,7 +33,7 @@ class AccountScreen extends ConsumerWidget {
                 ? null
                 : () async {
                     // get the navigator before the async gap
-                    final navigator = Navigator.of(context);
+                   // final navigator = Navigator.of(context);
                     final logout = await showAlertDialog(
                       context: context,
                       title: 'Are you sure?'.hardcoded,
@@ -45,12 +41,9 @@ class AccountScreen extends ConsumerWidget {
                       defaultActionText: 'Logout'.hardcoded,
                     );
                     if (logout == true) {
-                      final success = await ref
+                      ref
                           .read(accountScreenControllerProvider.notifier)
                           .signOut();
-                      if (success) {
-                        navigator.pop();
-                      }
                     }
                   },
           ),
@@ -65,14 +58,13 @@ class AccountScreen extends ConsumerWidget {
 }
 
 /// Simple user data table showing the uid and email
-class UserDataTable extends StatelessWidget {
+class UserDataTable extends ConsumerWidget {
   const UserDataTable({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final style = Theme.of(context).textTheme.subtitle2!;
-    // TODO: get user from auth repository
-    const user = AppUser(uid: '123', email: 'test@test.com');
+    final user = ref.watch(authStateChangesProvider).value;
     return DataTable(
       columns: [
         DataColumn(
@@ -91,12 +83,12 @@ class UserDataTable extends StatelessWidget {
       rows: [
         _makeDataRow(
           'uid'.hardcoded,
-          user.uid,
+          user?.uid ?? ' ',
           style,
         ),
         _makeDataRow(
           'email'.hardcoded,
-          user.email ?? '',
+          user?.email ?? '',
           style,
         ),
       ],
